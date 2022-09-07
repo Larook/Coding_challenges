@@ -1,0 +1,39 @@
+#*
+#!*.py
+#!*.txt
+#*
+production
+foobar_challenge_Proj
+.idea
+welcome.log
+
+task_*/*
+!task_*/*.py
+!task_*/*.txt
+
+#!task_1/*.py
+#!*/*.txt
+
+#.idea
+#foobar_challenge_Proj
+#production
+#
+#*/task_*/.png
+#*/task_*/.jpg
+#
+## Ignore everything
+##*
+#
+## But not these files...
+#!.gitignore
+#!*.py
+#!*.txt
+#
+## ...even if they are in subdirectories
+#!task_2/*.py
+#!task_2/*.txt
+##!*/*.txt
+
+## if the files to be tracked are in subdirectories
+#!*/a/b/file1.txt
+#!*/a/b/c/*
