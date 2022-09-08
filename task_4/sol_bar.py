@@ -389,7 +389,8 @@ if __name__ == "__main__":
 
         import time
         start_graph = time.time()
-        sol = solution(ipt)
+        for i in range(20):
+            sol = solution(ipt)
         time_graph = time.time() - start_graph
         print 'ipt', ipt, 'sol', sol, 'opt', opt
         print('time_graph', time_graph, 'sol', sol)
