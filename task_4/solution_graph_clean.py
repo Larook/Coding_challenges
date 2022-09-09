@@ -152,13 +152,12 @@ class FuelInjector:
             nodes_to_visit = self.sort_nodes_to_visit(nodes_to_visit, children)
             """
             if self.is_bfs:
-                # children = self.create_children(node_visit, act_fun=self.get_possible_actions_bfs)
-                children = self.create_children(node_visit, act_fun=self.get_possible_actions_no_redo)
+                children = self.create_children(node_visit, act_fun=self.get_possible_actions_bfs)
+                # children = self.create_children(node_visit, act_fun=self.get_possible_actions_no_redo)
                 children = self.filter_children_doubles(children, nodes_checked)
                 nodes_to_visit.extend(children)
             else:
                 # children = self.create_children(node_visit, act_fun=self.get_possible_actions3)
-                # children = self.create_children(node_visit, act_fun=self.get_possible_actions_bfs)
                 # children = self.create_children(node_visit, act_fun=self.get_possible_actions_legal)
                 children = self.create_children(node_visit, act_fun=self.get_possible_actions_no_redo)
                 # children = self.create_children(node_visit, act_fun=self.get_possible_actions_pref_sub)
@@ -170,8 +169,8 @@ class FuelInjector:
                 # nodes_to_visit = self.sort_nodes_to_visit2(nodes_to_visit)
                 # nodes_to_visit = self.sort_nodes_to_visit3(nodes_to_visit, children)
 
-                # nodes_to_visit = self.filter_nodes_to_visit(nodes_to_visit)
                 nodes_to_visit = self.sort_nodes_to_visit4(nodes_to_visit, children)
+                nodes_to_visit = self.filter_nodes_to_visit(nodes_to_visit)
 
                 # nodes_to_visit = sorted(nodes_to_visit + children, key=lambda x: x.g_cost_hist)
                 # nodes_to_visit = sorted(nodes_to_visit + children, key=lambda x: x.h_cost_now)
@@ -757,10 +756,10 @@ def solution_shallowest(n):
 if __name__ == "__main__":
     import time
 
-    # test_inputs = ['4', '15', '77', '135', '199', '217', '314', '2137', '213789', '21378932', '213789327']
-    # test_outputs = [2, 5, 9, 9, 10, 11, 11, 15, 24, 32, 37]
-    test_inputs = ['21378932']
-    test_outputs = [37]
+    test_inputs = ['4', '15', '77', '135', '199', '217', '314', '2137', '213789', '21378932', '213789327']
+    test_outputs = [2, 5, 9, 9, 10, 11, 11, 15, 24, 32, 37]
+    # test_inputs = ['21378932']
+    # test_outputs = [37]
     for ipt, opt in zip(test_inputs, test_outputs):
         # print 'ipt', ipt, 'sol', sol, 'opt', opt
         print 'ipt', ipt
