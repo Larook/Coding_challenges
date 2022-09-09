@@ -118,11 +118,12 @@ class FuelInjector:
         # nodes_to_visit.append(node_init)
 
         # add for start
-        if not self.is_bfs:
-            children = self.create_children(node_init, act_fun=self.get_possible_actions_no_redo)
-            # children = self.create_children(node_init, act_fun=self.get_possible_actions3)
-        else:
-            children = self.create_children(node_init, act_fun=self.get_possible_actions_no_redo)
+        # if not self.is_bfs:
+        #     children = self.create_children(node_init, act_fun=self.get_possible_actions_bfs)
+        #     # children = self.create_children(node_init, act_fun=self.get_possible_actions_no_redo)
+        #     # children = self.create_children(node_init, act_fun=self.get_possible_actions3)
+        # else:
+        children = self.create_children(node_init, act_fun=self.get_possible_actions_bfs)
         for child in children:
             nodes_to_visit.append(child)
 
@@ -132,9 +133,8 @@ class FuelInjector:
                 stop_search = True
                 break
 
-            node_visit = nodes_to_visit[0]
+            node_visit = nodes_to_visit.pop(0)
             self.parent_last_act = node_visit.hist_actions[-1]
-            nodes_to_visit.pop(0)
             if node_visit.state == self.STATE_SOLVED:
                 # todo: make sure that the same node.id will not be added to the solutions
                 nodes_solution.append(node_visit)
@@ -152,8 +152,9 @@ class FuelInjector:
             nodes_to_visit = self.sort_nodes_to_visit(nodes_to_visit, children)
             """
             if self.is_bfs:
-                children = self.create_children(node_visit, act_fun=self.get_possible_actions_bfs)
-                # children = self.filter_children_doubles(children, nodes_checked)
+                # children = self.create_children(node_visit, act_fun=self.get_possible_actions_bfs)
+                children = self.create_children(node_visit, act_fun=self.get_possible_actions_no_redo)
+                children = self.filter_children_doubles(children, nodes_checked)
                 nodes_to_visit.extend(children)
             else:
                 # children = self.create_children(node_visit, act_fun=self.get_possible_actions3)
@@ -168,7 +169,13 @@ class FuelInjector:
                 # nodes_to_visit = self.sort_nodes_to_visit(nodes_to_visit, children)
                 # nodes_to_visit = self.sort_nodes_to_visit2(nodes_to_visit)
                 # nodes_to_visit = self.sort_nodes_to_visit3(nodes_to_visit, children)
+
+                # nodes_to_visit = self.filter_nodes_to_visit(nodes_to_visit)
                 nodes_to_visit = self.sort_nodes_to_visit4(nodes_to_visit, children)
+
+                # nodes_to_visit = sorted(nodes_to_visit + children, key=lambda x: x.g_cost_hist)
+                # nodes_to_visit = sorted(nodes_to_visit + children, key=lambda x: x.h_cost_now)
+
                 # nodes_to_visit.extend(children)
 
 
@@ -186,16 +193,7 @@ class FuelInjector:
         """
         children = []
         pellets_now = node_parent.pellets
-        # possible_actions = self.get_possible_actions(node_parent.state)
-        # possible_actions = self.get_possible_actions2(node_parent.state, pellets_now)
-        # possible_actions = self.get_possible_actions3(pellets_now)
-        parents_hist = node_parent.hist_actions
-        # if len(node_parent.hist_actions) > 0 and not self.is_bfs:
-        #     possible_actions = act_fun(pellets_now)
-            # possible_actions = self.get_possible_actions_bfs(pellets_now)
-        # else:
-        #     possible_actions = self.get_possible_actions_bfs(pellets_now)
-        # possible_actions = self.get_possible_actions_bar(pellets_now)
+        # parents_hist = node_parent.hist_actions
         possible_actions = act_fun(pellets_now)
 
         # possible_actions = self.get_possible_actions_bar(pellets_now)
@@ -208,8 +206,6 @@ class FuelInjector:
                 if pellets_now % 2 != 0:
                     raise 'Something wrong with pellets'
                 pellets_kid = int(pellets_now / 2)
-            # child = self.Node(pellets_kid, node_parent.step + 1, node_parent.taken_actions + [action])
-            # child = self.Node(self.N_ID, pellets_kid, node_parent.step + 1, node_parent.hist_pellets + [node_parent.pellets])
             child = self.Node(self.N_ID, pellets_kid, node_parent.step + 1,
                               node_parent.hist_pellets + [node_parent.pellets], node_parent.hist_actions + [action])
             # add historical cost from all the
@@ -223,11 +219,12 @@ class FuelInjector:
         return only the children that were not already checked
         """
 
-        # filter out doubles inside children
-        children = self.get_children_unique_itself(children)
+        # filter out doubles inside children -- should never happen
+        # children = self.get_children_unique_itself(children)
 
         # filter out doubles inside nodes_checked
-        children = self.get_children_not_in_visited(children, nodes_checked)
+        # children = self.get_children_not_in_visited(children, nodes_checked)
+        children = self.get_children_not_in_visited2(children, nodes_checked)
 
         return children
 
@@ -512,14 +509,7 @@ class FuelInjector:
                 sorted_children_byte.insert(0, children[i])
                 children.__delitem__(i)
 
-        pellets_children = [child.pellets for child in children]
-        pellets_children.sort()
-        sorted_children_pellets = []
-        for i, pellets_smallest in enumerate(pellets_children):
-            for j, child in enumerate(children):
-                if pellets_smallest == child.pellets:
-                    sorted_children_pellets.insert(i, child)
-
+        sorted_children_pellets = sorted(children, key=lambda x: x.pellets)
         nodes_to_visit_sorted = sorted_nodes + sorted_children_byte
         nodes_to_visit_sorted = nodes_to_visit_sorted + sorted_children_pellets
         return nodes_to_visit_sorted
@@ -554,11 +544,11 @@ class FuelInjector:
         then the lower ones
         """
         sorted_c_byte, sorted_c_byte_next, unsorted_c = self.sort_bytewise(children)
+        # sorted_children = children
         sorted_children = self.sort_costwise(unsorted_c)
 
         nodes_to_visit_sorted = sorted_c_byte + sorted_c_byte_next + nodes_to_visit + sorted_children
         # nodes_to_visit_sorted = sorted_c_byte + sorted_c_byte_next + sorted_children + nodes_to_visit
-        # nodes_to_visit_sorted = sorted_c_byte + sorted_c_byte_next + sorted_children_pelletwise + nodes_to_visit
         return nodes_to_visit_sorted
 
 
@@ -603,13 +593,7 @@ class FuelInjector:
         """
         just sort the nodes miding only the pellets
         """
-        pellets_children = [child.pellets for child in children]
-        pellets_children.sort()
-        sorted_children_pellets = []
-        for i, pellets_smallest in enumerate(pellets_children):
-            for j, child in enumerate(children):
-                if pellets_smallest == child.pellets:
-                    sorted_children_pellets.insert(i, child)
+        sorted_children_pellets = sorted(children, key=lambda x: x.pellets)
         return sorted_children_pellets
 
     def get_children_unique_itself(self, children):
@@ -626,6 +610,48 @@ class FuelInjector:
             if unique_cnt == 1:
                 semi_unique_children.append(child_i)
         return semi_unique_children
+
+
+    def get_children_not_in_visited2(self, children_nodes, visited_nodes):
+        """
+        check only the pellets state
+
+        there might be a situation where 2 nodes have the same pellets but not the same steps
+        then delete the longer one
+        instead delete just dont add this new child (because it's implied only in BFS that the CHILD has more steps)
+        """
+
+        # children_ids = [node.id for node in children_nodes]
+        # visited_ids = [node.id for node in visited_nodes]
+        #
+        # # check the pellets state and steps taken
+        #
+        # # sort children stepwise
+        # nodes_to_sort = children_nodes + visited_nodes
+        # sorted_stepwise = sorted(nodes_to_sort, key=lambda x: x.step)
+        # sorted_pelletwise = sorted(sorted_stepwise, key=lambda x: x.pellets)
+        #
+        # pellets_occured_children = list(set(node.pellets for node in children_nodes)).sort()
+        # pellets_occured_visited = list(set(node.pellets for node in visited_nodes)).sort()
+        #
+        #
+        # ch_sorted_pelletwise = sorted(children_nodes, key=lambda x: x.pellets)
+        # for child in ch_sorted_pelletwise:
+        #     for pellets_visited in pellets_occured_visited:
+        #         if child.pellets == pellets_visited:
+
+
+        unique_children = []
+        for i, n_child in enumerate(children_nodes):
+            unique = True
+            for j, n_checked in enumerate(visited_nodes):
+                if int(n_child.pellets) == int(n_checked.pellets) and int(n_child.step) == int(n_checked.step):
+                        unique = False
+                        continue
+            if unique:
+                unique_children.append(n_child)
+        return unique_children
+
 
     def get_children_not_in_visited(self, semi_unique_children, nodes_checked):
         """
@@ -670,17 +696,34 @@ class FuelInjector:
         """
         sort the nodes miding the cost
         """
-        # sorted_nodes2 = sorted(nodes, key=lambda x: x.g_cost_hist)
-        sorted_nodes2 = sorted(nodes, key=lambda x: x.h_cost_now)
+        sorted_nodes2 = sorted(nodes, key=lambda x: x.g_cost_hist)
+        # sorted_nodes2 = sorted(nodes, key=lambda x: x.h_cost_now)
 
-        # g_costs = [node.g_cost_hist for node in nodes]
-        # g_costs.sort()
-        # sorted_nodes = []
-        # for i, g_cost in enumerate(g_costs):
-        #     for j, node in enumerate(nodes):
-        #         if g_cost == node.g_cost_hist:
-        #             sorted_nodes.insert(i, node)
         return sorted_nodes2
+
+    def filter_nodes_to_visit(self, nodes_to_visit):
+        """
+        if nodes with same pellets occur multiple times with different steps -- leave the shortest
+        """
+        ids_to_remove = []
+
+        # select nodes to remove
+        for node_i in nodes_to_visit:
+            for node_j in nodes_to_visit:
+                # if found same pellets and longer path -> remove
+                if node_i.pellets == node_j.pellets and node_j.step > node_i.step:
+                    ids_to_remove.append(node_j.id)
+
+        if len(ids_to_remove) > 0:
+            # remove nodes
+            filtered_out_nodes = []
+            for id_remove in ids_to_remove:
+                for node in nodes_to_visit:
+                    if node.id != id_remove:
+                        filtered_out_nodes.append(node)
+            return filtered_out_nodes
+        else:
+            return nodes_to_visit
 
 
 def solution(n):
@@ -689,8 +732,9 @@ def solution(n):
     n = int(n)
 
     solver = FuelInjector(is_bfs=False)
-    nodes_solution = solver.solve_fuel_pellets_graph(n, no_solutions=10)
-    best_solution = solver.get_best_solution(nodes_solution)
+    nodes_solution = solver.solve_fuel_pellets_graph(n, no_solutions=1)
+    best_solution = sorted(nodes_solution, key=lambda x: x.step)[0]
+    # print 'nodes_solution', nodes_solution
     if show_hist:
         print 'best_solution hist_pellets', best_solution.hist_pellets
 
@@ -715,20 +759,20 @@ if __name__ == "__main__":
 
     # test_inputs = ['4', '15', '77', '135', '199', '217', '314', '2137', '213789', '21378932', '213789327']
     # test_outputs = [2, 5, 9, 9, 10, 11, 11, 15, 24, 32, 37]
-    test_inputs = ['213789327']
+    test_inputs = ['21378932']
     test_outputs = [37]
     for ipt, opt in zip(test_inputs, test_outputs):
         # print 'ipt', ipt, 'sol', sol, 'opt', opt
         print 'ipt', ipt
 
         start_graph = time.time()
-        for i in range(2):
+        for i in range(1):
             sol = solution(ipt)
         time_graph = time.time() - start_graph
         print('time_graph', time_graph, 'sol', sol)
 
         start_bfs = time.time()
-        for i in range(2):
+        for i in range(1):
             sol_bfs = solution_shallowest(ipt)
         time_bfs = time.time() - start_bfs
         print('time_bfs', time_bfs, 'sol_bfs', sol_bfs)
