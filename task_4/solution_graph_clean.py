@@ -156,6 +156,8 @@ class FuelInjector:
                 # children = self.create_children(node_visit, act_fun=self.get_possible_actions_no_redo)
                 children = self.filter_children_doubles(children, nodes_checked)
                 nodes_to_visit.extend(children)
+                # nodes_to_visit = self.filter_nodes_to_visit(nodes_to_visit)
+
             else:
                 # children = self.create_children(node_visit, act_fun=self.get_possible_actions3)
                 # children = self.create_children(node_visit, act_fun=self.get_possible_actions_legal)
@@ -713,6 +715,7 @@ class FuelInjector:
                 if node_i.pellets == node_j.pellets and node_j.step > node_i.step:
                     ids_to_remove.append(node_j.id)
 
+        ids_to_remove = list(set(ids_to_remove))
         if len(ids_to_remove) > 0:
             # remove nodes
             filtered_out_nodes = []
@@ -731,7 +734,7 @@ def solution(n):
     n = int(n)
 
     solver = FuelInjector(is_bfs=False)
-    nodes_solution = solver.solve_fuel_pellets_graph(n, no_solutions=1)
+    nodes_solution = solver.solve_fuel_pellets_graph(n, no_solutions=5)
     best_solution = sorted(nodes_solution, key=lambda x: x.step)[0]
     # print 'nodes_solution', nodes_solution
     if show_hist:
@@ -756,10 +759,13 @@ def solution_shallowest(n):
 if __name__ == "__main__":
     import time
 
-    test_inputs = ['4', '15', '77', '135', '199', '217', '314', '2137', '213789', '21378932', '213789327']
-    test_outputs = [2, 5, 9, 9, 10, 11, 11, 15, 24, 32, 37]
-    # test_inputs = ['21378932']
-    # test_outputs = [37]
+    # test_inputs = ['4', '15', '77', '135', '199', '217', '314', '2137', '213789', '21378932', '213789327']
+    # test_outputs = [2, 5, 9, 9, 10, 11, 11, 15, 24, 32, 37]
+    # test_inputs = ['213789', '21378932']
+    # test_outputs = [24, 32]
+    test_inputs = ['2137', '213789', '21378932', '213789327', '2137893273']
+    test_outputs = [15, 24, 32, 37, 42]
+
     for ipt, opt in zip(test_inputs, test_outputs):
         # print 'ipt', ipt, 'sol', sol, 'opt', opt
         print 'ipt', ipt
@@ -770,11 +776,12 @@ if __name__ == "__main__":
         time_graph = time.time() - start_graph
         print('time_graph', time_graph, 'sol', sol)
 
-        start_bfs = time.time()
-        for i in range(1):
-            sol_bfs = solution_shallowest(ipt)
-        time_bfs = time.time() - start_bfs
-        print('time_bfs', time_bfs, 'sol_bfs', sol_bfs)
+        # start_bfs = time.time()
+        # for i in range(1):
+        #     sol_bfs = solution_shallowest(ipt)
+        # time_bfs = time.time() - start_bfs
+        # print('time_bfs', time_bfs, 'sol_bfs', sol_bfs)
+
         if sol != opt:
             # raise Warning("Test failed!")
             print 'TEST FAILED'
