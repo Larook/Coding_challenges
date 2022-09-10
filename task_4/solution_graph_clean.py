@@ -27,8 +27,8 @@ def sort_costwise(nodes):
     """
     sort the nodes miding the cost
     """
-    # sorted_nodes2 = sorted(nodes, key=lambda x: x.g_cost_hist)
-    sorted_nodes2 = sorted(nodes, key=lambda x: x.h_cost_now)
+    sorted_nodes2 = sorted(nodes, key=lambda x: x.g_cost_hist)
+    # sorted_nodes2 = sorted(nodes, key=lambda x: x.h_cost_now)
 
     return sorted_nodes2
 
@@ -175,17 +175,11 @@ def sort_bytewise(children):
         dist_low, dist_high = get_dist_to_bytes(child.pellets)
         if dist_high == 0 or dist_low == 0:
             sorted_byte.insert(0, children[i])
-            # children.__delitem__(i)
         elif dist_high == 1 or dist_low == 1:
             sorted_byte_next.insert(0, children[i])
-            # children.__delitem__(i)
         else:
             # just add them to the list
             normal_nodes.append(children[i])
-            # children.__delitem__(i)
-
-    # sorted_bytewise = sorted_byte + sorted_byte_next + normal_nodes
-    # return sorted_bytewise
     return sorted_byte, sorted_byte_next, normal_nodes
 
 
@@ -205,6 +199,7 @@ def sort_nodes_to_visit4(nodes_to_visit, children):
     sorted_children = sort_costwise(unsorted_c)
 
     nodes_to_visit_sorted = sorted_c_byte + sorted_c_byte_next + nodes_to_visit + sorted_children
+
     # nodes_to_visit_sorted = sorted_c_byte + sorted_c_byte_next + sorted_children + nodes_to_visit
     return nodes_to_visit_sorted
 
@@ -281,13 +276,14 @@ def filter_children_doubles(children, nodes_checked):
 
 class Node:
     # def __init__(self, n_id, pellets, step, hist_pellets, hist_actions):
-    def __init__(self, n_id, pellets, step, hist_actions):
+    # def __init__(self, n_id, pellets, step, hist_actions):
+    def __init__(self, n_id, pellets, step, parent_action):
 
         self.id = n_id
         self.pellets = pellets
         self.step = step
         self.state_finished = pellets == 1
-        self.hist_actions = hist_actions
+        self.parent_action = parent_action
         # self.prev_action = prev_action
         # self.hist_pellets = hist_pellets
 
@@ -296,10 +292,10 @@ class Node:
 
     def get_node_cost_now(self):
         dist = min(get_dist_to_bytes(self.pellets))
-        if dist == 0:
-            return 0
-        else:
-            h = 0.8 * self.pellets + 10 * self.step + 1 * dist
+        # if dist == 0:
+        #     return 0
+        # else:
+        h = 0.8 * self.pellets + 10 * self.step + 1 * dist
         return h
 
     def __str__(self):
@@ -329,24 +325,15 @@ class FuelInjector:
         BFS, DFS, A*
         """
         nodes_solution = []
-
         nodes_checked = []
         nodes_to_visit = []
-        hist_actions = []
 
-        hist_pellets = []
         step = 0
-        # node_init = Node(self.N_ID, pellets_init, step, hist_pellets, hist_actions)
-        node_init = Node(self.N_ID, pellets_init, step, hist_actions)
+        node_init = Node(self.N_ID, pellets_init, step, None)
         self.N_ID += 1
         # nodes_to_visit.append(node_init)
 
         # add for start
-        # if not self.is_bfs:
-        #     children = self.create_children(node_init, act_fun=self.get_possible_actions_bfs)
-        #     # children = self.create_children(node_init, act_fun=self.get_possible_actions_no_redo)
-        #     # children = self.create_children(node_init, act_fun=self.get_possible_actions3)
-        # else:
         children = self.create_children(node_init, act_fun=self.get_possible_actions_bfs)
         for child in children:
             nodes_to_visit.append(child)
@@ -358,9 +345,9 @@ class FuelInjector:
                 break
 
             node_visit = nodes_to_visit.pop(0)
-            self.parent_last_act = node_visit.hist_actions[-1]
+            self.parent_last_act = node_visit.parent_action
+
             if node_visit.state_finished:
-                # todo: make sure that the same node.id will not be added to the solutions
                 nodes_solution.append(node_visit)
                 if len(nodes_solution) >= no_solutions:
                     stop_search = True
@@ -372,7 +359,7 @@ class FuelInjector:
             filter children doubles take too much time, so can improve creating children! ~ done
 
             solution is heuristics!
-            the answer is MCTS or A* -- both require heuristics
+            the answer is MCTS or Dijkstra -- both require heuristics
             nodes_to_visit = self.sort_nodes_to_visit(nodes_to_visit, children)
             """
             if self.is_bfs:
@@ -406,8 +393,7 @@ class FuelInjector:
 
             nodes_checked.append(node_visit)
             if show_hist:
-                print
-                'nodes_to_visit', [str(node) for node in nodes_to_visit], '\nnodes_checked', [str(node) for node in
+                print 'nodes_to_visit', [str(node) for node in nodes_to_visit], '\nnodes_checked', [str(node) for node in
                                                                                               nodes_checked], '\n'
         return nodes_solution
 
@@ -433,7 +419,8 @@ class FuelInjector:
                 pellets_kid = int(pellets_now / 2)
             # child = Node(self.N_ID, pellets_kid, node_parent.step + 1,
             #                   node_parent.hist_pellets + [node_parent.pellets], node_parent.hist_actions + [action])
-            child = Node(self.N_ID, pellets_kid, node_parent.step + 1, node_parent.hist_actions + [action])
+            # child = Node(self.N_ID, pellets_kid, node_parent.step + 1, node_parent.hist_actions + [action])
+            child = Node(self.N_ID, pellets_kid, node_parent.step + 1, action)
             # add historical cost from all the
             child.g_cost_hist = node_parent.h_cost_now + child.h_cost_now
             self.N_ID += 1
@@ -637,10 +624,10 @@ if __name__ == "__main__":
 
     # test_inputs = ['4', '15', '77', '135', '199', '217', '314', '2137', '213789', '21378932', '213789327']
     # test_outputs = [2, 5, 9, 9, 10, 11, 11, 15, 24, 32, 37]
-    # test_inputs = ['213789', '21378932']
-    # test_outputs = [24, 32]
-    test_inputs = ['2137', '213789', '21378932', '213789327', '2137893273']
-    test_outputs = [15, 24, 32, 37, 42]
+    test_inputs = ['213789']
+    test_outputs = [24]
+    # test_inputs = ['2137', '213789', '21378932', '213789327', '2137893273']
+    # test_outputs = [15, 24, 32, 37, 42]
 
     for ipt, opt in zip(test_inputs, test_outputs):
         # print 'ipt', ipt, 'sol', sol, 'opt', opt
@@ -652,11 +639,11 @@ if __name__ == "__main__":
         time_graph = time.time() - start_graph
         print('time_graph', time_graph, 'sol', sol)
 
-        # start_bfs = time.time()
-        # for i in range(1):
-        #     sol_bfs = solution_shallowest(ipt)
-        # time_bfs = time.time() - start_bfs
-        # print('time_bfs', time_bfs, 'sol_bfs', sol_bfs)
+        start_bfs = time.time()
+        for i in range(1):
+            sol_bfs = solution_shallowest(ipt)
+        time_bfs = time.time() - start_bfs
+        print('time_bfs', time_bfs, 'sol_bfs', sol_bfs)
 
         if sol != opt:
             # raise Warning("Test failed!")
