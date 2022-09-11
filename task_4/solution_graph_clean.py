@@ -311,10 +311,10 @@ class FuelInjector:
         nodes_checked = []
         nodes_to_visit = []
 
+        # create root of the tree
         step = 0
         node_init = Node(self.N_ID, pellets_init, step, None)
         self.N_ID += 1
-        # nodes_to_visit.append(node_init)
 
         # add for start
         children = self.create_children(node_init, act_fun=self.get_possible_actions_bfs)
@@ -348,29 +348,16 @@ class FuelInjector:
                 children = self.create_children(node_visit, act_fun=self.get_possible_actions_bfs)
                 children = filter_children_doubles(children, nodes_checked)
                 nodes_to_visit.extend(children)
-                # nodes_to_visit = self.filter_nodes_to_visit(nodes_to_visit)
 
             else:
-                # children = self.create_children(node_visit, act_fun=self.get_possible_actions3)
-                # children = self.create_children(node_visit, act_fun=self.get_possible_actions_legal)
                 children = self.create_children(node_visit, act_fun=self.get_possible_actions_no_redo)
-                # children = self.create_children(node_visit, act_fun=self.get_possible_actions_pref_sub)
                 # children = self.create_children(node_visit, act_fun=self.get_possible_actions_bfs)
+                # children = self.create_children(node_visit, act_fun=self.get_possible_actions_legal)
 
                 children = filter_children_doubles(children, nodes_checked)
                 # todo: proper heuristics
-                # nodes_to_visit = self.sort_nodes_to_visit(nodes_to_visit, children)
-                # nodes_to_visit = self.sort_nodes_to_visit2(nodes_to_visit)
-                # nodes_to_visit = self.sort_nodes_to_visit3(nodes_to_visit, children)
-
                 nodes_to_visit = sort_nodes_to_visit4(nodes_to_visit, children)
                 nodes_to_visit = filter_nodes_to_visit(nodes_to_visit)
-
-                # nodes_to_visit = sorted(nodes_to_visit + children, key=lambda x: x.g_cost_hist)
-                # nodes_to_visit = sorted(nodes_to_visit + children, key=lambda x: x.h_cost_now)
-
-                # nodes_to_visit.extend(children)
-
 
             nodes_checked.append(node_visit)
             if show_hist:
@@ -398,9 +385,6 @@ class FuelInjector:
                 if pellets_now % 2 != 0:
                     raise 'Something wrong with pellets'
                 pellets_kid = int(pellets_now / 2)
-            # child = Node(self.N_ID, pellets_kid, node_parent.step + 1,
-            #                   node_parent.hist_pellets + [node_parent.pellets], node_parent.hist_actions + [action])
-            # child = Node(self.N_ID, pellets_kid, node_parent.step + 1, node_parent.hist_actions + [action])
             child = Node(self.N_ID, pellets_kid, node_parent.step + 1, action)
             # add historical cost from all the
             child.g_cost_hist = node_parent.h_cost_now + child.h_cost_now
@@ -476,24 +460,6 @@ class FuelInjector:
                 # always SUB
                 possible_actions.append(self.ACTION_SUBTR)
 
-        # else:
-        #     # ADD when distance to byte?
-        #     dist_low, dist_high = get_dist_to_bytes(pellets)
-        #     if dist_high == 1 or dist_low == 1:
-        #         if dist_high == 1:
-        #             possible_actions.append(self.ACTION_ADD)
-        #             return possible_actions
-        #         else:
-        #             possible_actions.append(self.ACTION_SUBTR)
-        #             return possible_actions
-        #     else:
-        #         # if (pellets+1)%2 == 0:
-        #         possible_actions.append(self.ACTION_ADD)
-        #
-        #         # always SUB
-        #         possible_actions.append(self.ACTION_SUBTR)
-
-
         return possible_actions
 
     def get_possible_actions_pref_sub(self, pellets):
@@ -513,7 +479,6 @@ class FuelInjector:
             if dist_high == 1:
             # if can go up to the byte, then go
                 possible_actions.append(self.ACTION_ADD)
-            # else:
             # SUB
             if self.parent_last_act != self.ACTION_ADD:
                 possible_actions.append(self.ACTION_SUBTR)
@@ -535,20 +500,7 @@ class FuelInjector:
             possible_actions.append(self.ACTION_DIV)
             # if this is already a byte dont bother with other actions!
             # return possible_actions
-
         else:
-            # # ADD when distance to byte?
-            # dist_low, dist_high = get_dist_to_bytes(pellets)
-            #
-            # # ADD
-            # if dist_high == 1:
-            #     # if can go up to the byte, then go
-            #     possible_actions.append(self.ACTION_ADD)
-            # # SUB
-            # if dist_low == 1:
-            #     # if can go up to the byte, then go
-            #     possible_actions.append(self.ACTION_SUBTR)
-
             # ADD
             if self.parent_last_act != self.ACTION_SUBTR:
                 possible_actions.append(self.ACTION_ADD)
@@ -609,10 +561,6 @@ def solution_shallowest(n):
 if __name__ == "__main__":
     import time
 
-    # test_inputs = ['4', '15', '77', '135', '199', '217', '314', '2137', '213789', '21378932', '213789327']
-    # test_outputs = [2, 5, 9, 9, 10, 11, 11, 15, 24, 32, 37]
-    # test_inputs = ['213789']
-    # test_outputs = [24]
     test_inputs = ['2137', '213789', '21378932', '213789327', '2137893273']
     test_outputs = [15, 24, 32, 37, 42]
 
@@ -626,11 +574,11 @@ if __name__ == "__main__":
         time_graph = time.time() - start_graph
         print('time_graph', time_graph, 'sol', sol)
 
-        # start_bfs = time.time()
-        # for i in range(1):
-        #     sol_bfs = solution_shallowest(ipt)
-        # time_bfs = time.time() - start_bfs
-        # print('time_bfs', time_bfs, 'sol_bfs', sol_bfs)
+        start_bfs = time.time()
+        for i in range(1):
+            sol_bfs = solution_shallowest(ipt)
+        time_bfs = time.time() - start_bfs
+        print('time_bfs', time_bfs, 'sol_bfs', sol_bfs)
 
         if sol != opt:
             # raise Warning("Test failed!")
@@ -644,7 +592,7 @@ Test
 1 - OK
 2 - OK
 3
-4 - OK
+4 
 5
 6
 7

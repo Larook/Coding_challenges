@@ -9,6 +9,8 @@ welcome.log
 task_*/*
 !task_*/*.py
 !task_*/*.txt
-/task_4/cheat.py
-/task_4/solution_MCTS.py
-/task_4/cheat.txt
+
+task_4/*.py
+task_4/*.txt
+!/task_4/simple.py
+!/task_4/solution_graph_clean.py
