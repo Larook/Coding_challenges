@@ -7,6 +7,7 @@ Passes 1,2,8,9,10
 so probably still some mistakes in the heuristics
 """
 import copy
+import math
 
 show_hist = False
 
@@ -65,27 +66,6 @@ def get_children_not_in_visited2(children_nodes, visited_nodes):
     then delete the longer one
     instead delete just dont add this new child (because it's implied only in BFS that the CHILD has more steps)
     """
-
-    # children_ids = [node.id for node in children_nodes]
-    # visited_ids = [node.id for node in visited_nodes]
-    #
-    # # check the pellets state and steps taken
-    #
-    # # sort children stepwise
-    # nodes_to_sort = children_nodes + visited_nodes
-    # sorted_stepwise = sorted(nodes_to_sort, key=lambda x: x.step)
-    # sorted_pelletwise = sorted(sorted_stepwise, key=lambda x: x.pellets)
-    #
-    # pellets_occured_children = list(set(node.pellets for node in children_nodes)).sort()
-    # pellets_occured_visited = list(set(node.pellets for node in visited_nodes)).sort()
-    #
-    #
-    # ch_sorted_pelletwise = sorted(children_nodes, key=lambda x: x.pellets)
-    # for child in ch_sorted_pelletwise:
-    #     for pellets_visited in pellets_occured_visited:
-    #         if child.pellets == pellets_visited:
-
-
     unique_children = []
     for i, n_child in enumerate(children_nodes):
         unique = True
@@ -194,11 +174,15 @@ def sort_nodes_to_visit4(nodes_to_visit, children):
     first -- the ones 0, +-1 to byte, rest of nodes
     then the lower ones
     """
-    sorted_c_byte, sorted_c_byte_next, unsorted_c = sort_bytewise(children)
-    # sorted_children = children
-    sorted_children = sort_costwise(unsorted_c)
+    # sorted_c_byte, sorted_c_byte_next, unsorted_c = sort_bytewise(children)
+    # # sorted_children = children
+    # sorted_children = sort_costwise(unsorted_c)
+    #
+    # nodes_to_visit_sorted = sorted_c_byte + sorted_c_byte_next + nodes_to_visit + sorted_children
 
-    nodes_to_visit_sorted = sorted_c_byte + sorted_c_byte_next + nodes_to_visit + sorted_children
+    # try just sorting costwise
+    stuff = nodes_to_visit + children
+    nodes_to_visit_sorted = sort_costwise(stuff)
 
     # nodes_to_visit_sorted = sorted_c_byte + sorted_c_byte_next + sorted_children + nodes_to_visit
     return nodes_to_visit_sorted
@@ -291,11 +275,10 @@ class Node:
         self.g_cost_hist = 0
 
     def get_node_cost_now(self):
-        dist = min(get_dist_to_bytes(self.pellets))
-        # if dist == 0:
-        #     return 0
-        # else:
-        h = 0.8 * self.pellets + 10 * self.step + 1 * dist
+        # dist = min(get_dist_to_bytes(self.pellets))
+        if math.log(self.pellets, 2).is_integer():
+            return 0
+        h = 0.8 * self.pellets + 10 * self.step
         return h
 
     def __str__(self):
@@ -335,8 +318,7 @@ class FuelInjector:
 
         # add for start
         children = self.create_children(node_init, act_fun=self.get_possible_actions_bfs)
-        for child in children:
-            nodes_to_visit.append(child)
+        nodes_to_visit.extend(children)
 
         stop_search = False
         while not stop_search:
@@ -358,13 +340,12 @@ class FuelInjector:
             BFS -- shallowest solution (GREAT), but the performance...
             filter children doubles take too much time, so can improve creating children! ~ done
 
-            solution is heuristics!
+            solution is heuristics and informed search!
             the answer is MCTS or Dijkstra -- both require heuristics
             nodes_to_visit = self.sort_nodes_to_visit(nodes_to_visit, children)
             """
             if self.is_bfs:
                 children = self.create_children(node_visit, act_fun=self.get_possible_actions_bfs)
-                # children = self.create_children(node_visit, act_fun=self.get_possible_actions_no_redo)
                 children = filter_children_doubles(children, nodes_checked)
                 nodes_to_visit.extend(children)
                 # nodes_to_visit = self.filter_nodes_to_visit(nodes_to_visit)
@@ -556,15 +537,21 @@ class FuelInjector:
             # return possible_actions
 
         else:
-            # ADD when distance to byte?
+            # # ADD when distance to byte?
             # dist_low, dist_high = get_dist_to_bytes(pellets)
+            #
+            # # ADD
+            # if dist_high == 1:
+            #     # if can go up to the byte, then go
+            #     possible_actions.append(self.ACTION_ADD)
+            # # SUB
+            # if dist_low == 1:
+            #     # if can go up to the byte, then go
+            #     possible_actions.append(self.ACTION_SUBTR)
 
             # ADD
-            # if dist_high == 1:
-                # if can go up to the byte, then go
             if self.parent_last_act != self.ACTION_SUBTR:
                 possible_actions.append(self.ACTION_ADD)
-            # else:
             # SUB
             if self.parent_last_act != self.ACTION_ADD:
                 possible_actions.append(self.ACTION_SUBTR)
@@ -597,7 +584,7 @@ def solution(n):
     n = int(n)
 
     solver = FuelInjector(is_bfs=False)
-    nodes_solution = solver.solve_fuel_pellets_graph(n, no_solutions=5)
+    nodes_solution = solver.solve_fuel_pellets_graph(n, no_solutions=3)
     best_solution = sorted(nodes_solution, key=lambda x: x.step)[0]
     # print 'nodes_solution', nodes_solution
     if show_hist:
@@ -624,10 +611,10 @@ if __name__ == "__main__":
 
     # test_inputs = ['4', '15', '77', '135', '199', '217', '314', '2137', '213789', '21378932', '213789327']
     # test_outputs = [2, 5, 9, 9, 10, 11, 11, 15, 24, 32, 37]
-    test_inputs = ['213789']
-    test_outputs = [24]
-    # test_inputs = ['2137', '213789', '21378932', '213789327', '2137893273']
-    # test_outputs = [15, 24, 32, 37, 42]
+    # test_inputs = ['213789']
+    # test_outputs = [24]
+    test_inputs = ['2137', '213789', '21378932', '213789327', '2137893273']
+    test_outputs = [15, 24, 32, 37, 42]
 
     for ipt, opt in zip(test_inputs, test_outputs):
         # print 'ipt', ipt, 'sol', sol, 'opt', opt
@@ -639,11 +626,11 @@ if __name__ == "__main__":
         time_graph = time.time() - start_graph
         print('time_graph', time_graph, 'sol', sol)
 
-        start_bfs = time.time()
-        for i in range(1):
-            sol_bfs = solution_shallowest(ipt)
-        time_bfs = time.time() - start_bfs
-        print('time_bfs', time_bfs, 'sol_bfs', sol_bfs)
+        # start_bfs = time.time()
+        # for i in range(1):
+        #     sol_bfs = solution_shallowest(ipt)
+        # time_bfs = time.time() - start_bfs
+        # print('time_bfs', time_bfs, 'sol_bfs', sol_bfs)
 
         if sol != opt:
             # raise Warning("Test failed!")
