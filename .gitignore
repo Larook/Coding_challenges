@@ -11,3 +11,4 @@ task_*/*
 !task_*/*.txt
 /task_4/cheat.py
 /task_4/solution_MCTS.py
+/task_4/cheat.txt
