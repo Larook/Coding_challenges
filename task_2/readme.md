@@ -40,7 +40,7 @@ Both the source and destination squares will be an integer between 0 and 63, inc
 |56|57|58|59|60|61|62|63|
 -------------------------
 
-<img src="https://github.com/Larook/Coding_challenges/tree/master/task_2/intro.png">
+<img src="https://github.com/Larook/Coding_challenges/blob/master/task_2/intro.png">
 
 
 Languages

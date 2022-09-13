@@ -31,7 +31,7 @@ In this case, pegs would be [4, 30, 50] and solution(pegs) should return [12, 1]
 The list pegs will be given sorted in ascending order and will contain at least 2 and no more than 20 distinct
 positive integers, all between 1 and 10000 inclusive.
 
-<img src="https://github.com/Larook/Coding_challenges/tree/master/task_3/intro.png">
+<img src="https://github.com/Larook/Coding_challenges/blob/master/task_1/intro.png">
 
 
 Languages
