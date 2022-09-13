@@ -26,6 +26,8 @@ For example:
 solution(4) returns 2: 4 -> 2 -> 1
 solution(15) returns 5: 15 -> 16 -> 8 -> 4 -> 2 -> 1
 
+<img src="https://github.com/Larook/Coding_challenges/tree/master/task_4/intro.png">
+
 Languages
 =========
 

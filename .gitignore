@@ -9,6 +9,8 @@ welcome.log
 task_*/*
 !task_*/*.py
 !task_*/*.txt
+!task_*/*.md
+!task_*/intro.png
 
 task_4/*.py
 task_4/*.txt
